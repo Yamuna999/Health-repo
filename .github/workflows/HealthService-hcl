@@ -1,0 +1,40 @@
+name: CI/CD Pipeline for Microservices
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the main branch
+
+env:
+  AWS_REGION: us-east-1  
+  ECR_REPO_NAME_1: your-ecr-repository-1  
+  ECR_REPO_NAME_2: your-ecr-repository-2  # Second microservice's ECR repo
+  FARGATE_CLUSTER_NAME: your-fargate-cluster-name 
+  FARGATE_SERVICE_NAME_1: your-fargate-service-name-1  # First microservice service
+  FARGATE_SERVICE_NAME_2: your-fargate-service-name-2  # Second microservice service
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}  # Set in GitHub Secrets
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Set in GitHub Secrets
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Set in GitHub Secrets
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Build Docker images for Microservice 1
+        run: |
+          docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION_
